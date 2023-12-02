@@ -15,7 +15,7 @@ function main() {
     const id: String = process.argv[2];
 
     if (problemEntryPoints.has(id)) {
-        const subMain = problemEntryPoints.get("01")!;
+        const subMain = problemEntryPoints.get(id)!;
         subMain();
     } else {
         console.log("Problem does not exist: " + id)
