@@ -80,6 +80,28 @@ function isPossibleGame(game: Game, content: Set): boolean {
     return true;
 };
 
+function powerOfGame(game: Game): number {
+    let minRed: number = 0;
+    let minGreen: number = 0;
+    let minBlue: number = 0;
+
+    for (const set of game.sets) {
+        if (set.red > minRed) {
+            minRed = set.red;
+        }
+
+        if (set.green > minGreen) {
+            minGreen = set.green;
+        }
+
+        if (set.blue > minBlue) {
+            minBlue = set.blue;
+        }
+    }
+
+    return minRed * minGreen * minBlue;
+};
+
 export async function main02() {
     const file = await fs.open("input/02.txt");
 
@@ -87,6 +109,7 @@ export async function main02() {
 
     let game: Game;
     let validGamesSum: number = 0;
+    let powerOfGamesSum: number = 0;
 
     for await (const line of file.readLines()) {
     // for (const line of EXAMPLE_01.split("\n")) {
@@ -98,7 +121,10 @@ export async function main02() {
         if (isPossibleGame(game, contentPart1)) {
             validGamesSum += game.id;
         }
+
+        powerOfGamesSum += powerOfGame(game);
     }
 
     console.log(validGamesSum);
+    console.log(powerOfGamesSum);
 };
