@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises"
 
 const RE_DIGITS = /0|1|2|3|4|5|6|7|8|9/g;
-const RE_DIGITS_WITH_NAMES = /(?=(one|two|three|four|five|six|seven|eight|nine|zero))|0|1|2|3|4|5|6|7|8|9/g
+const RE_DIGITS_WITH_NAMES = /(?=(one|two|three|four|five|six|seven|eight|nine|zero))|0|1|2|3|4|5|6|7|8|9/g;
 
 const STRINGS_TO_DIGITS = new Map<string, string>([
     ["one", "1"],
@@ -20,7 +20,7 @@ const EXAMPLE_01 = `
 1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
-treb7uchet`
+treb7uchet`;
 
 const EXAMPLE_02 = `
 two1nine
@@ -29,7 +29,7 @@ abcone2threexyz
 xtwone3four
 4nineeightseven2
 zoneight234
-7pqrstsixteen`
+7pqrstsixteen`;
 
 function extractDigits(line : string, withStrings : boolean = false): string[] {
     let digits = [];
@@ -49,7 +49,7 @@ function extractDigits(line : string, withStrings : boolean = false): string[] {
     }
 
     return digits;
-}
+};
 
 export async function main01() {
     const file = await fs.open("input/01.txt");
