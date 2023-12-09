@@ -2,11 +2,13 @@ import * as process from "node:process";
 
 import { main01 } from "./01";
 import { main02 } from "./02";
+import { main03 } from "./03";
 
 const problemEntryPoints: Map<String, Function> = new Map();
 
 problemEntryPoints.set("01", main01);
 problemEntryPoints.set("02", main02);
+problemEntryPoints.set("03", main03);
 
 function main() {
     if (process.argv.length < 3) {
