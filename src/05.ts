@@ -46,11 +46,6 @@ type Resource = {
     value: number;
 }
 
-type MapOutput = {
-    target: string;
-    fun: Function;
-}
-
 function makeMap(ranges: RangeMap[]): Function {
     const f = (x: number) => {
         for (const range of ranges) {
@@ -64,11 +59,32 @@ function makeMap(ranges: RangeMap[]): Function {
     return f;
 }
 
-function applyMaps(maps: Map<string, MapOutput>, input: Resource, targetType: string) {
-    while (input.type !== targetType) {
-        let m = maps.get(input.type)!;
-        input.type = m.target;
-        input.value = m.fun(input.value);
+function makeInverseMap(ranges: RangeMap[]): Function {
+    const f = (x: number) => {
+        for (const range of ranges) {
+            if (range.targetStart <= x && x < range.targetStart + range.length) {
+                return x - range.targetStart + range.sourceStart;
+            }
+        }
+        return x;
+    }
+
+    return f;
+}
+
+function applyMaps(
+    maps: Map<string, Map<string, Function>>,
+    input: Resource,
+    steps: string[],
+) {
+    let next: string;
+    let func: Function;
+
+    while (steps.length > 0) {
+        next = steps.pop()!;
+        func = maps.get(input.type)!.get(next)!;
+        input.type = next;
+        input.value = func(input.value);
     }
 
     return input;
@@ -78,7 +94,7 @@ export async function main05() {
     let file = await fs.open("input/05.txt");
 
     let initialSeeds: number[] = [];
-    let maps: Map<string, MapOutput> = new Map();
+    let maps: Map<string, Map<string, Function>> = new Map();
 
     let isHeader: boolean = false;
     let source: string = "";
@@ -94,7 +110,15 @@ export async function main05() {
 
         if (line === "") {
             if (source.length > 0 && target.length > 0) {
-                maps.set(source, { target: target, fun: makeMap(ranges) });
+                if (!maps.has(source)) {
+                    maps.set(source, new Map());
+                }
+                maps.get(source)?.set(target, makeMap(ranges));
+
+                if (!maps.has(target)) {
+                    maps.set(target, new Map());
+                }
+                maps.get(target)?.set(source, makeInverseMap(ranges));
             }
             ranges = [];
             isHeader = true;
@@ -115,8 +139,49 @@ export async function main05() {
         })
     }
 
-    maps.set(source, { target: target, fun: makeMap(ranges), });
+    if (!maps.has(source)) {
+        maps.set(source, new Map());
+    }
+    maps.get(source)?.set(target, makeMap(ranges));
 
-    const out = initialSeeds.map(n => applyMaps(maps, { type: "seed", value: n }, "location").value);
+    if (!maps.has(target)) {
+        maps.set(target, new Map());
+    }
+    maps.get(target)?.set(source, makeInverseMap(ranges));
+
+    const out = initialSeeds.map(
+        n => applyMaps(
+            maps,
+            { type: "seed", value: n },
+            ["location", "humidity", "temperature", "light", "water", "fertilizer", "soil"],
+        ).value
+    );
     console.log(Math.min(...out));
+
+    let initialSeedRanges = [];
+    for (let i = 0; i < initialSeeds.length; i += 2) {
+        initialSeedRanges.push([
+            initialSeeds[i], initialSeeds[i] + initialSeeds[i + 1]
+        ]);
+    }
+
+    let location = 0;
+    let found = false;
+    while (!found) {
+        let seed = applyMaps(
+            maps,
+            { type: "location", value: location },
+            ["seed", "soil", "fertilizer", "water", "light", "temperature", "humidity"],
+        ).value;
+
+        for (const [start, end] of initialSeedRanges) {
+            if (start <= seed && seed < end) {
+                console.log(location);
+                found = true;
+                break;
+            }
+        }
+
+        location += 1;
+    }
 }
