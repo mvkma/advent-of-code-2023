@@ -37,4 +37,16 @@ export async function main06() {
     }
 
     console.log(result);
+
+    const time = Number(lines[0].replaceAll(/\W/g, "").match(/\d+/g)?.[0]);
+    const distance = Number(lines[1].replaceAll(/\W/g, "").match(/\d+/g)?.[0]);
+
+    let x = 0;
+    while (true) {
+        if (x * (time - x) > distance) {
+            break;
+        }
+        x += 1;
+    }
+    console.log(time - 2 * x + 1);
 }
