@@ -7,17 +7,7 @@ KK677 28
 KTJJT 220
 QQQJA 483`
 
-const Hands = {
-    FiveOfAKind: 6,  // 50000
-    FourOfAKind: 5,  // 41000
-    FullHouse: 4,    // 32000
-    ThreeOfAKind: 3, // 31100
-    TwoPair: 2,      // 22100
-    OnePair: 1,      // 21110
-    HighCard: 0,     // 11111
-} as const;
-
-const CardValues = new Map<string, number>([
+const CARD_VALUES = new Map<string, number>([
     ["A", 14],
     ["K", 13],
     ["Q", 12],
@@ -32,6 +22,16 @@ const CardValues = new Map<string, number>([
     ["3", 3],
     ["2", 2],
 ]);
+
+const Hands = {
+    FiveOfAKind: 6,  // 50000
+    FourOfAKind: 5,  // 41000
+    FullHouse: 4,    // 32000
+    ThreeOfAKind: 3, // 31100
+    TwoPair: 2,      // 22100
+    OnePair: 1,      // 21110
+    HighCard: 0,     // 11111
+} as const;
 
 type Card = {
     label: string;
@@ -74,7 +74,7 @@ function makeHand(cards: string, bid: string): Hand {
     }
 }
 
-function compare(a: Hand, b: Hand): number {
+function compare(a: Hand, b: Hand, cardValues: Map<string, number>): number {
     if (a.type < b.type) {
         return -1;
     }
@@ -88,7 +88,24 @@ function compare(a: Hand, b: Hand): number {
         i++;
     }
 
-    return CardValues.get(a.cards[i])! - CardValues.get(b.cards[i])!;
+    return cardValues.get(a.cards[i])! - cardValues.get(b.cards[i])!;
+}
+
+function findBest(hand: Hand, cardValues: Map<string, number>): Hand {
+    if (hand.cards.indexOf("J") === -1) {
+        return hand;
+    }
+
+    let best = hand;
+    let curr = hand;
+    for (const c of cardValues.keys()) {
+        curr = makeHand(hand.cards.replaceAll("J", c), hand.bid.toString());
+        if (curr.type > best.type) {
+            best = { cards: hand.cards, bid: hand.bid, type: curr.type };
+        }
+    }
+
+    return best;
 }
 
 export async function main07() {
@@ -97,7 +114,7 @@ export async function main07() {
     const hands: Hand[] = [];
 
     for await (const line of file.readLines()) {
-        // for (const line of EXAMPLE_01.split("\n")) {
+    // for (const line of EXAMPLE_01.split("\n")) {
         if (line === "") {
             continue;
         }
@@ -107,7 +124,13 @@ export async function main07() {
         hands.push(makeHand(cards, bid));
     }
 
-    const winning = hands.sort(compare).reduce((s, hand, i) => s + hand.bid * (i + 1), 0);
-
+    const winning = hands.sort((a, b) => compare(a, b, CARD_VALUES)).reduce((s, hand, i) => s + hand.bid * (i + 1), 0);
     console.log(winning);
+
+    const bestHands = hands.map(a => findBest(a, CARD_VALUES));
+
+    const jokerCardValues = CARD_VALUES;
+    jokerCardValues.set("J", 1);
+    const bestWinning = bestHands.sort((a, b) => compare(a, b, jokerCardValues)).reduce((s, hand, i) => s + hand.bid * (i + 1), 0);
+    console.log(bestWinning);
 }
