@@ -15,24 +15,28 @@ function differences(sequence: number[]): number[] {
     return diffs;
 }
 
-function predict(sequence: number[]): number {
+function predict(sequence: number[]): number[] {
+    const starts: number[] = [sequence[0]];
     const ends: number[] = [sequence[sequence.length - 1]];
 
     let diffs = differences(sequence);
-    ends.push(diffs.at(-1)!)
+    starts.push(diffs.at(0)!);
+    ends.push(diffs.at(-1)!);
 
     while (!diffs.map(s => s === 0).reduce((a, b) => a && b)) {
         diffs = differences(diffs);
-        ends.push(diffs.at(-1)!)
+        starts.push(diffs.at(0)!);
+        ends.push(diffs.at(-1)!);
     }
 
-    return ends.reduce((a, b) => a + b);
+    return [ends.reduce((a, b) => a + b), starts.reduceRight((a, b) => b - a)];
 }
 
 export async function main09() {
     const file = await fs.open("input/09.txt");
 
-    let total = 0;
+    let totalStarts = 0;
+    let totalEnds = 0;
 
     for await (const line of file.readLines()) {
     // for (const line of EXAMPLE_01.split("\n")) {
@@ -42,8 +46,11 @@ export async function main09() {
 
         const sequence = line.split(" ").map(Number);
 
-        total += predict(sequence);
+        let prediction = predict(sequence);
+        totalEnds += prediction[0];
+        totalStarts += prediction[1];
     }
 
-    console.log(total);
+    console.log(totalEnds);
+    console.log(totalStarts);
 }
