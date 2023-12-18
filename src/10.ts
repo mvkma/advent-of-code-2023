@@ -21,6 +21,40 @@ SJLL7
 |F--J
 LJ.LJ`
 
+const EXAMPLE_04 = `
+...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`
+
+const EXAMPLE_05 = `
+..........
+.S------7.
+.|F----7|.
+.||OOOO||.
+.||OOOO||.
+.|L-7F-J|.
+.|II||II|.
+.L--JL--J.
+..........`
+
+const EXAMPLE_06 = `
+FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`
+
 type Position = {
     i: number;
     j: number;
@@ -62,8 +96,55 @@ function getNext(curr: Position, next: Position, symbol: string): Position {
     }
 }
 
+function countInteriorTiles(loop: Position[], lines: string[], imax: number, jmax: number) {
+    let count = 0;
+    let inside = false;
+    let prev = "."
+
+    for (let i = 0; i < imax; i++) {
+        for (let j = 0; j < jmax; j++) {
+            if (loop.findIndex(pos => pos.i === i && pos.j === j) === -1) {
+                if (inside) {
+                    count++;
+                }
+                continue;
+            }
+
+            switch (lines[i][j]) {
+                case "|": {
+                    inside = !inside;
+                    break;
+                }
+                case "L": {
+                    prev = lines[i][j];
+                    break;
+                }
+                case "F": {
+                    prev = lines[i][j];
+                    break;
+                }
+                case "J": {
+                    if (prev === "F") {
+                        inside = !inside;
+                    }
+                    break;
+                }
+                case "7": {
+                    if (prev === "L") {
+                        inside = !inside;
+                    }
+                    break;
+                }
+            }
+
+        }
+    }
+
+    return count;
+}
+
 export async function main10() {
-    // const lines = EXAMPLE_03.split("\n").slice(1);
+    // const lines = EXAMPLE_06.split("\n").slice(1);
     const file = await fs.open("input/10.txt");
     const lines = (await file.readFile()).toString().split("\n");
 
@@ -107,11 +188,15 @@ export async function main10() {
     }
 
     let nsteps = 0;
+    let loop: Position[] = [];
+
     while (curr != next) {
         [curr, next] = [next, getNext(curr, next, lines[next.i][next.j])];
+        loop.push(curr);
         nsteps++; 
     }
 
-    console.log(nsteps, Math.floor(nsteps / 2));
-
+    console.log(Math.floor(nsteps / 2));
+    lines[start.i] = lines[start.i].replace("S", "7"); // FIXME
+    console.log(countInteriorTiles(loop, lines, lines.length, lines[0].length));
 }
