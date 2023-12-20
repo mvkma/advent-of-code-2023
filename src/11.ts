@@ -58,7 +58,8 @@ function expandGrid(
     galaxies: number[],
     grid: Grid,
     markedRows: Set<number>,
-    markedColumns: Set<number>): [number[], Grid] {
+    markedColumns: Set<number>,
+    growthFactor: number = 1): [number[], Grid] {
     const rows: number[] = [];
     for (let i = 0; i < grid.imax; i++) {
         if (!markedRows.has(i)) {
@@ -78,26 +79,26 @@ function expandGrid(
     for (let m = 0; m < rows.length; m++) {
         for (let k = 0; k < newGalaxies.length; k++) {
             if (newGalaxies[k] > rows[m] * newGrid.jmax) {
-                newGalaxies[k] += newGrid.jmax;
+                newGalaxies[k] += newGrid.jmax * growthFactor;
             }
         }
-        newGrid.imax++;
+        newGrid.imax += growthFactor;
         for (let n = m + 1; n < rows.length; n++) {
-            rows[n]++;
+            rows[n] += growthFactor;
         }
     }
 
     for (let n = 0; n < columns.length; n++) {
         for (let k = 0; k < newGalaxies.length; k++) {
             if (newGalaxies[k] % newGrid.jmax > columns[n]) {
-                newGalaxies[k] += Math.floor(newGalaxies[k] / newGrid.jmax) + 1;
+                newGalaxies[k] += (Math.floor(newGalaxies[k] / newGrid.jmax) + 1) * growthFactor;
             } else {
-                newGalaxies[k] += Math.floor(newGalaxies[k] / newGrid.jmax);
+                newGalaxies[k] += Math.floor(newGalaxies[k] / newGrid.jmax) * growthFactor;
             }
         }
-        newGrid.jmax++;
+        newGrid.jmax += growthFactor;
         for (let m = n + 1; m < columns.length; m++) {
-            columns[m]++;
+            columns[m] += growthFactor;
         }
     }
 
@@ -133,6 +134,15 @@ function shortestPath(start: number, galaxies: number[], grid: Grid, endConditio
     return distances;
 }
 
+function straightLine(g: number, h: number, grid: Grid) {
+    const idToTule = (id: number) => [(id - id % grid.jmax) / grid.jmax, id % grid.jmax];
+
+    const [i1, j1] = idToTule(g);
+    const [i2, j2] = idToTule(h);
+
+    return Math.abs(i2 - i1) + Math.abs(j2 - j1);
+}
+
 export async function main11() {
     // const lines = EXAMPLE_01.split("\n").slice(1);
     const file = await fs.open("input/11.txt");
@@ -155,38 +165,30 @@ export async function main11() {
         }
     }
 
-    const [newGalaxies, newGrid] = expandGrid(galaxies, grid, markedRows, markedColumns);
+    let [newGalaxies, newGrid] = expandGrid(galaxies, grid, markedRows, markedColumns, 1);
 
-    let distances = new Map<number, number>();
-
+    let total = 0;
     for (let m = 0; m < newGalaxies.length; m++) {
-        let dist = shortestPath(
-            newGalaxies[m],
-            newGalaxies,
-            newGrid,
-            (distances: Map<number, number>) => {
-                for (let n = 0; n < newGalaxies.length; n++) {
-                    if (!distances.has(newGalaxies[n])) {
-                        return false;
-                    }
-                }
-                return true;
-            });
-
-        for (let n = 0; n < newGalaxies.length; n++) {
-            if (newGalaxies[n] < newGalaxies[m]) {
-                distances.set(newGalaxies[n] * Math.max(...newGalaxies) + newGalaxies[m],
-                    dist.get(newGalaxies[n])!);
-            } else {
-                distances.set(newGalaxies[m] * Math.max(...newGalaxies) + newGalaxies[n],
-                    dist.get(newGalaxies[n])!);
-            }
+        for (let n = m; n < newGalaxies.length; n++) {
+            let g = newGalaxies[m];
+            let h = newGalaxies[n];
+            total += straightLine(g, h, newGrid);
         }
     }
 
-    let total = 0;
-    for (const v of distances.values()) {
-        total += v;
+    console.log(total);
+
+    let growthFactor = 1000000 - 1;
+    [newGalaxies, newGrid] = expandGrid(galaxies, grid, markedRows, markedColumns, growthFactor);
+
+    total = 0;
+    for (let m = 0; m < newGalaxies.length; m++) {
+        for (let n = m; n < newGalaxies.length; n++) {
+            let g = newGalaxies[m];
+            let h = newGalaxies[n];
+            total += straightLine(g, h, newGrid);
+        }
     }
+
     console.log(total);
 }
