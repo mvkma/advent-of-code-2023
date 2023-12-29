@@ -71,3 +71,62 @@ export function heap<T>(): Heap<T> {
 
     return { insert, pop, size };
 }
+
+export function floyd(seq: any[]): [number, number] {
+    let t = 1;
+    let h = 2;
+
+    while (seq[t] !== seq[h]) {
+        t += 1;
+        h += 2;
+    }
+
+    let mu = 0;
+    t = 0;
+
+    while (seq[t] !== seq[h]) {
+        t++;
+        h++;
+        mu++;
+    }
+
+    let lam = 1;
+    h = t + 1;
+
+    while (seq[t] !== seq[h]) {
+        h++;
+        lam++;
+    }
+
+    return [mu, lam];
+}
+
+
+export function brent(seq: any[]): [number, number] {
+    let exp = 1;
+    let lam = 1;
+    let t = 0;
+    let h = 1;
+
+    while (seq[t] !== seq[h]) {
+        if (exp === lam) {
+            t = h;
+            exp *= 2;
+            lam = 0;
+        }
+
+        h += 1;
+        lam += 1;
+    }
+
+    t = 0;
+    h = lam;
+    let mu = 0;
+    while (seq[t] !== seq[h]) {
+        t += 1;
+        h += 1;
+        mu += 1;
+    }
+
+    return [mu, lam];
+}
