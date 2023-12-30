@@ -113,14 +113,14 @@ function shortestPath(start: number, galaxies: number[], grid: Grid, endConditio
     queue.insert(0, start);
 
     while (queue.size() > 0) {
-        let curr = queue.pop()!;
+        let [_, curr] = queue.pop()!;
 
         if (endCondition(distances)) {
             break;
         }
 
-        for (const next of getNeighbors(curr, grid)) {
-            let alt = distances.get(curr)! + 1;
+        for (const next of getNeighbors(curr!, grid)) {
+            let alt = distances.get(curr!)! + 1;
 
             if (distances.has(next) && distances.get(next)! <= alt) {
                 continue;

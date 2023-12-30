@@ -1,6 +1,6 @@
 export type Heap<T> = {
     insert: (priority: number, item: T) => void;
-    pop: () => T | undefined;
+    pop: () => (number | undefined | T)[] | undefined;
     size: () => number;
 }
 
@@ -62,7 +62,7 @@ export function heap<T>(): Heap<T> {
             curr = swap;
         }
 
-        return item?.value;
+        return [item?.priority, item?.value];
     };
 
     const size = () => {
@@ -142,5 +142,23 @@ export class ObjectSet<T> extends Set {
 
     has(elem: T) {
         return super.has(typeof elem === 'object' ? JSON.stringify(elem) : elem);
+    }
+}
+
+export class ObjectMap<T> extends Map {
+    set(key: any, value: any): this {
+        return super.set(typeof key === 'object' ? JSON.stringify(key) : key, value);
+    }
+
+    get(key: any) {
+        return super.get(typeof key === 'object' ? JSON.stringify(key) : key);
+    }
+
+    delete(key: any): boolean {
+        return super.delete(typeof key === 'object' ? JSON.stringify(key) : key);
+    }
+
+    has(key: any): boolean {
+        return super.has(typeof key === 'object' ? JSON.stringify(key) : key);
     }
 }
