@@ -21,4 +21,31 @@ export async function main15() {
 
     const total = steps.map(hash).reduce((a, b) => a + b, 0);
     console.log(total);
+
+    let boxes: Map<string, number>[] = new Array(256);
+    for (let i = 0; i < boxes.length; i++) {
+        boxes[i] = new Map<string, number>();
+    }
+
+    for (const step of steps) {
+        if (step[step.length - 1] === "-") {
+            let box = step.slice(0, step.length - 1);
+            boxes[hash(box)].delete(box);
+        } else {
+            let parts = step.split("=");
+            let box = hash(parts[0]);
+            let lens = Number(parts[1]);
+            boxes[box].set(parts[0], lens);
+        }
+    }
+
+    let power = 0;
+    for (let i = 0; i < boxes.length; i++) {
+        let slot = 1;
+        for (const lens of boxes[i].values()) {
+            power += (i + 1) * slot * lens;
+            slot++;
+        }
+    }
+    console.log(power);
 }
