@@ -46,13 +46,8 @@ function move(ray: LightRay, grid: Grid): LightRay {
     }
 }
 
-export async function main16() {
-    // const lines = EXAMPLE_01.split("\n").slice(1);
-    const file = await fs.open("input/16.txt");
-    const lines = (await file.readFile()).toString().trim().split("\n");
-    const grid: Grid = { rows: lines.length, cols: lines[0].length };
-
-    let queue: LightRay[] = [{ direction: Directions.Right, i: 0, j: -1 }];
+function propagateRay(start: LightRay, lines: string[], grid: Grid): ObjectSet<[number, number]> {
+    let queue: LightRay[] = [start];
     let seen = new ObjectSet<LightRay>();
     let visited = new ObjectSet<[number, number]>();
 
@@ -146,5 +141,35 @@ export async function main16() {
         }
     }
 
-    console.log(visited.size - 1);
+    return visited;
+}
+
+export async function main16() {
+    // const lines = EXAMPLE_01.split("\n").slice(1);
+    const file = await fs.open("input/16.txt");
+    const lines = (await file.readFile()).toString().trim().split("\n");
+    const grid: Grid = { rows: lines.length, cols: lines[0].length };
+
+    let start = { direction: Directions.Right, i: 0, j: -1 };
+
+    console.log(propagateRay(start, lines, grid).size - 1);
+
+    let maxNumVisited = 0;
+    for (let i = 0; i < grid.rows; i++) {
+        maxNumVisited = Math.max(
+            maxNumVisited,
+            propagateRay({ direction: Directions.Right, i: i, j: -1 }, lines, grid).size - 1,
+            propagateRay({ direction: Directions.Left, i: i, j: grid.cols }, lines, grid).size - 1,
+        );
+    }
+
+    for (let j = 0; j < grid.cols; j++) {
+        maxNumVisited = Math.max(
+            maxNumVisited,
+            propagateRay({ direction: Directions.Down, i: -1, j: j }, lines, grid).size - 1,
+            propagateRay({ direction: Directions.Up, i: grid.rows, j: j }, lines, grid).size - 1,
+        );
+    }
+
+    console.log(maxNumVisited);
 }
