@@ -38,16 +38,18 @@ type State = {
     prev: State | undefined;
 }
 
-function getNeighbors(curr: State) {
+function getNeighbors(curr: State, turnCondition: (s: State) => boolean, continueCondition: (s: State) => boolean) {
     let neighbors: State[] = [];
 
     switch (curr.d) {
         case Directions.Down:
-            neighbors.push(
-                { i: curr.i, j: curr.j - 1, d: Directions.Left, s: 1, prev: undefined },
-                { i: curr.i, j: curr.j + 1, d: Directions.Right, s: 1, prev: undefined },
-            );
-            if (curr.s < 3) {
+            if (continueCondition(curr)) {
+                neighbors.push(
+                    { i: curr.i, j: curr.j - 1, d: Directions.Left, s: 1, prev: undefined },
+                    { i: curr.i, j: curr.j + 1, d: Directions.Right, s: 1, prev: undefined },
+                );
+            }
+            if (turnCondition(curr)) {
                 neighbors.push(
                     { i: curr.i + 1, j: curr.j, d: Directions.Down, s: curr.s + 1, prev: undefined }
                 );
@@ -55,11 +57,13 @@ function getNeighbors(curr: State) {
             break;
 
         case Directions.Up:
-            neighbors.push(
-                { i: curr.i, j: curr.j - 1, d: Directions.Left, s: 1, prev: undefined },
-                { i: curr.i, j: curr.j + 1, d: Directions.Right, s: 1, prev: undefined },
-            );
-            if (curr.s < 3) {
+            if (continueCondition(curr)) {
+                neighbors.push(
+                    { i: curr.i, j: curr.j - 1, d: Directions.Left, s: 1, prev: undefined },
+                    { i: curr.i, j: curr.j + 1, d: Directions.Right, s: 1, prev: undefined },
+                );
+            }
+            if (turnCondition(curr)) {
                 neighbors.push(
                     { i: curr.i - 1, j: curr.j, d: Directions.Up, s: curr.s + 1, prev: undefined }
                 );
@@ -67,11 +71,13 @@ function getNeighbors(curr: State) {
             break;
 
         case Directions.Right:
-            neighbors.push(
-                { i: curr.i - 1, j: curr.j, d: Directions.Up, s: 1, prev: undefined },
-                { i: curr.i + 1, j: curr.j, d: Directions.Down, s: 1, prev: undefined },
-            );
-            if (curr.s < 3) {
+            if (continueCondition(curr)) {
+                neighbors.push(
+                    { i: curr.i - 1, j: curr.j, d: Directions.Up, s: 1, prev: undefined },
+                    { i: curr.i + 1, j: curr.j, d: Directions.Down, s: 1, prev: undefined },
+                );
+            }
+            if (turnCondition(curr)) {
                 neighbors.push(
                     { i: curr.i, j: curr.j + 1, d: Directions.Right, s: curr.s + 1, prev: undefined }
                 );
@@ -79,11 +85,13 @@ function getNeighbors(curr: State) {
             break;
 
         case Directions.Left:
-            neighbors.push(
-                { i: curr.i - 1, j: curr.j, d: Directions.Up, s: 1, prev: undefined },
-                { i: curr.i + 1, j: curr.j, d: Directions.Down, s: 1, prev: undefined },
-            );
-            if (curr.s < 3) {
+            if (continueCondition(curr)) {
+                neighbors.push(
+                    { i: curr.i - 1, j: curr.j, d: Directions.Up, s: 1, prev: undefined },
+                    { i: curr.i + 1, j: curr.j, d: Directions.Down, s: 1, prev: undefined },
+                );
+            }
+            if (turnCondition(curr)) {
                 neighbors.push(
                     { i: curr.i, j: curr.j - 1, d: Directions.Left, s: curr.s + 1, prev: undefined }
                 );
@@ -115,7 +123,7 @@ export async function main17() {
         }
 
         // console.log();
-        for (const next of getNeighbors(curr)) {
+        for (const next of getNeighbors(curr, (s: State) => s.s < 3, (_: State) => true)) {
             if (next.i < 0 || next.i >= grid.rows || next.j < 0 || next.j >= grid.cols) {
                 continue;
             }
@@ -129,5 +137,36 @@ export async function main17() {
             seen.set(next, newPrio);
         }
     }
+
+    queue = heap<State>();
+    seen = new ObjectMap<State>();
+
+    queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Down, prev: undefined })
+    queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Right, prev: undefined })
+
+    while (queue.size() > 0) {
+        let [prio, curr] = queue.pop()! as [number, State];
+
+        if ((curr.i === grid.rows - 1) && (curr.j === grid.cols - 1)) {
+            console.log(prio);
+            break;
+        }
+
+        // console.log();
+        for (const next of getNeighbors(curr, (s: State) => s.s < 10, (s: State) => s.s >= 4)) {
+            if (next.i < 0 || next.i >= grid.rows || next.j < 0 || next.j >= grid.cols) {
+                continue;
+            }
+
+            let newPrio = prio + lines[next.i][next.j];
+            if (seen.has(next) && seen.get(next) <= newPrio) {
+                continue;
+            }
+
+            queue.insert(newPrio, next);
+            seen.set(next, newPrio);
+        }
+    }
+
 
 }
