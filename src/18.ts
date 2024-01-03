@@ -53,9 +53,12 @@ function area(vertices: Vertex[]): number {
 export async function main18() {
     let file = await fs.open("input/18.txt");
 
-    let vertices: Vertex[] = [];
-    let curr: Vertex = { x: 0, y: 0 };
-    let boundary = 0;
+    let verticesPart1: Vertex[] = [];
+    let verticesPart2: Vertex[] = [];
+    let currPart1: Vertex = { x: 0, y: 0 };
+    let currPart2: Vertex = { x: 0, y: 0 };
+    let boundaryPart1 = 0;
+    let boundaryPart2 = 0;
 
     // for (const line of EXAMPLE_01.split("\n")) {
     for await (const line of file.readLines()) {
@@ -65,11 +68,16 @@ export async function main18() {
 
         let [direction, distance, color] = line.split(" ");
 
-        boundary += Number(distance);
-        curr = move(curr, direction, Number(distance));
-        vertices.push(curr);
+        boundaryPart1 += Number(distance);
+        currPart1 = move(currPart1, direction, Number(distance));
+        verticesPart1.push(currPart1);
+
+        boundaryPart2 += parseInt(color.slice(2, -2), 16);
+        currPart2 = move(currPart2, ["R", "D", "L", "U"][Number(color.slice(-2, -1))], parseInt(color.slice(2, -2), 16));
+        verticesPart2.push(currPart2);
     }
 
     // Pick's theorem
-    console.log(area(vertices) + 1 - boundary / 2 + boundary);
+    console.log(area(verticesPart1) + 1 - boundaryPart1 / 2 + boundaryPart1);
+    console.log(area(verticesPart2) + 1 - boundaryPart2 / 2 + boundaryPart2);
 }
