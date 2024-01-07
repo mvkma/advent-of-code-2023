@@ -162,3 +162,24 @@ export class ObjectMap<T> extends Map {
         return super.has(typeof key === 'object' ? JSON.stringify(key) : key);
     }
 }
+
+export function xgcd(a: number, b: number): number[] {
+    let [r1, r2] = [a, b];
+    let [s1, s2] = [1, 0];
+    let [t1, t2] = [0, 1];
+
+    let q: number;
+
+    while (r2 !== 0) {
+        q = Math.floor(r1 / r2);
+        [r1, r2] = [r2, r1 - q * r2];
+        [s1, s2] = [s2, s1 - q * s2];
+        [t1, t2] = [t2, t1 - q * t2];
+    }
+
+    return [r1, s1, t1];
+}
+
+export function lcm(a: number, b: number): number {
+    return a * b / xgcd(a, b)[0];
+}
