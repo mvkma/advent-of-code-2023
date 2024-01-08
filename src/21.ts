@@ -74,16 +74,19 @@ export async function main21() {
         }
     }
 
-    let seen = new ObjectMap<Position, number>();
+    let seen = new ObjectSet<Position>();
     let final = new ObjectSet<Position>();
     let queue = heap<State>();
 
-    seen.set(start.position, 0)
-    queue.insert(nsteps, start);
+    queue.insert(0, start);
 
     while (queue.size() > 0) {
-        let [rem, state] = queue.pop()! as [number, State];
-        let steps = nsteps - rem
+        let [steps, state] = queue.pop()! as [number, State];
+
+        if (seen.has(state.position)) {
+            continue;
+        }
+        seen.add(state.position);
 
         if ((steps % 2 === 0) && (steps <= nsteps)) {
             final.add(state.position);
@@ -94,11 +97,7 @@ export async function main21() {
         }
 
         for (const next of getNeighbors(state, grid, rocks)) {
-            if (!seen.has(next.position) || seen.get(next.position)! > steps + 1) {
-                queue.insert(rem - 1, next);
-            }
-
-            seen.set(next.position, steps + 1);
+            queue.insert(steps + 1, next);
         }
     }
 
