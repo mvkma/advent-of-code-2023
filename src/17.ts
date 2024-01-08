@@ -109,7 +109,7 @@ export async function main17() {
     const grid: Grid = { rows: lines.length, cols: lines[0].length };
 
     let queue = heap<State>();
-    let seen = new ObjectMap<State>();
+    let seen = new ObjectMap<State, number>();
 
     queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Down, prev: undefined })
     queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Right, prev: undefined })
@@ -139,7 +139,7 @@ export async function main17() {
     }
 
     queue = heap<State>();
-    seen = new ObjectMap<State>();
+    seen = new ObjectMap<State, number>();
 
     queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Down, prev: undefined })
     queue.insert(0, { i: 0, j: 0, s: 0, d: Directions.Right, prev: undefined })

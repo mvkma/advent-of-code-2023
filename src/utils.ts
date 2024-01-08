@@ -145,20 +145,20 @@ export class ObjectSet<T> extends Set {
     }
 }
 
-export class ObjectMap<T> extends Map {
-    set(key: any, value: any): this {
+export class ObjectMap<T, U> extends Map {
+    set(key: T, value: U): this {
         return super.set(typeof key === 'object' ? JSON.stringify(key) : key, value);
     }
 
-    get(key: any) {
+    get(key: T) {
         return super.get(typeof key === 'object' ? JSON.stringify(key) : key);
     }
 
-    delete(key: any): boolean {
+    delete(key: T): boolean {
         return super.delete(typeof key === 'object' ? JSON.stringify(key) : key);
     }
 
-    has(key: any): boolean {
+    has(key: T): boolean {
         return super.has(typeof key === 'object' ? JSON.stringify(key) : key);
     }
 }
