@@ -83,6 +83,75 @@ function printBricks(bricks: Brick[], slices: Map<number, number[]>, grid: Grid)
 
 }
 
+function step(bricks: Brick[], slices: Map<number, number[]>): Set<number> {
+    let moved = new Set<number>();
+
+    for (let i = 0; i < bricks.length; i++) {
+        let curr = bricks[i];
+        if (curr.z[0] === 1) {
+            continue;
+        }
+
+        let can_move = true;
+        for (const ix of slices.get(curr.z[0] - 1)!) {
+            let c = bricks[ix];
+            if (overlap({ x: c.x, y: c.y }, { x: curr.x, y: curr.y })) {
+                can_move = false;
+                break;
+            }
+        }
+
+        if (!can_move) {
+            continue;
+        }
+
+        curr.z = [curr.z[0] - 1, curr.z[1] - 1];
+        slices.get(curr.z[0])!.push(i);
+        slices.get(curr.z[1])?.splice(slices.get(curr.z[1])?.indexOf(i)!, 1);
+        moved.add(i);
+    }
+
+    return moved;
+}
+
+function computeSupport(bricks: Brick[], slices: Map<number, number[]>) {
+    let supportedBy = new Map<number, number[]>();
+    let supports = new Map<number, number[]>();
+
+    for (let i = 0; i < bricks.length; i++) {
+        let curr = bricks[i];
+
+        supports.set(i, []);
+        // for (const j of slices.get(curr.z[0] + 1)!) {
+        for (const j of slices.get(curr.z[1])!) {
+            if (i === j) {
+                continue;
+            }
+
+            let other = bricks[j];
+            if (overlap({ x: other.x, y: other.y }, { x: curr.x, y: curr.y })) {
+                supports.get(i)?.push(j);
+            }
+        }
+
+        supportedBy.set(i, []);
+
+        if (curr.z[0] === 1) {
+            continue;
+        }
+
+        for (const j of slices.get(curr.z[0] - 1)!) {
+            let other = bricks[j];
+            if (overlap({ x: other.x, y: other.y }, { x: curr.x, y: curr.y })) {
+                supportedBy.get(i)?.push(j);
+            }
+        }
+
+    }
+
+    return [supportedBy, supports];
+}
+
 export async function main22() {
     const file = await fs.open("input/22.txt");
 
@@ -127,70 +196,15 @@ export async function main22() {
 
     let done = false;
     while (!done) {
-        done = true;
-        for (let i = 0; i < bricks.length; i++) {
-            let curr = bricks[i];
-            if (curr.z[0] === 1) {
-                continue;
-            }
-
-            let can_move = true;
-            for (const ix of slices.get(curr.z[0] - 1)!) {
-                let c = bricks[ix];
-                if (overlap({ x: c.x, y: c.y }, { x: curr.x, y: curr.y })) {
-                    can_move = false;
-                    break;
-                }
-            }
-
-            if (!can_move) {
-                continue;
-            }
-
-            curr.z = [curr.z[0] - 1, curr.z[1] - 1];
-            slices.get(curr.z[0])!.push(i);
-            slices.get(curr.z[1])?.splice(slices.get(curr.z[1])?.indexOf(i)!, 1);
-            done = false
-        }
+        done = step(bricks, slices).size === 0;
     }
 
     // printBricks(bricks, slices, grid);
 
-    let supportedBy = new Map<number, number[]>();
-    let supports = new Map<number, number[]>();
-
-    for (let i = 0; i < bricks.length; i++) {
-        let curr = bricks[i];
-
-        supports.set(i, []);
-        // for (const j of slices.get(curr.z[0] + 1)!) {
-        for (const j of slices.get(curr.z[1])!) {
-            if (i === j) {
-                continue;
-            }
-
-            let other = bricks[j];
-            if (overlap({ x: other.x, y: other.y }, { x: curr.x, y: curr.y })) {
-                supports.get(i)?.push(j);
-            }
-        }
-
-        supportedBy.set(i, []);
-
-        if (curr.z[0] === 1) {
-            continue;
-        }
-
-        for (const j of slices.get(curr.z[0] - 1)!) {
-            let other = bricks[j];
-            if (overlap({ x: other.x, y: other.y }, { x: curr.x, y: curr.y })) {
-                supportedBy.get(i)?.push(j);
-            }
-        }
-
-    }
+    let [supportedBy, supports] = computeSupport(bricks, slices);
 
     let removable = new Set<number>();
+    let nonRemovable = new Set<number>();
     for (const [i, js] of supports.entries()) {
         let can_remove = true;
         for (const j of js) {
@@ -202,7 +216,41 @@ export async function main22() {
 
         if (can_remove) {
             removable.add(i);
+        } else {
+            nonRemovable.add(i);
         }
     }
     console.log(removable.size);
+
+    let fallen = new Map<number, Set<number>>();
+
+    for (const i of nonRemovable) {
+        let newBricks: Brick[] = bricks.map(b => { return { x: b.x, y: b.y, z: b.z } });
+        newBricks.splice(i, 1);
+
+        let newSlices = new Map<number, number[]>();
+
+        for (const k of slices.keys()) {
+            let v = slices.get(k)!.slice();
+
+            if (v.indexOf(i) !== -1) {
+                v.splice(v.indexOf(i), 1);
+            }
+            newSlices.set(k, v.map(ix => ix >= i ? ix - 1 : ix));
+        }
+
+        fallen.set(i, new Set<number>());
+        while (true) {
+            let fallenSet = fallen.get(i)!;
+            let oldNum = fallenSet.size;
+            step(newBricks, newSlices).forEach(n=> fallenSet.add(n));
+            if (oldNum === fallenSet.size) {
+                break;
+            }
+        }
+    }
+
+    let total = 0;
+    fallen.forEach((v, _) => total += v.size);
+    console.log(total);
 }
