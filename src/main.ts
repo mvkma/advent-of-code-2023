@@ -24,6 +24,7 @@ import { main21 } from "./21";
 import { main22 } from "./22";
 import { main23 } from "./23";
 import { main24 } from "./24";
+import { main25 } from "./25";
 
 const problemEntryPoints: Map<String, Function> = new Map();
 
@@ -51,6 +52,7 @@ problemEntryPoints.set("21", main21);
 problemEntryPoints.set("22", main22);
 problemEntryPoints.set("23", main23);
 problemEntryPoints.set("24", main24);
+problemEntryPoints.set("25", main25);
 
 function main() {
     if (process.argv.length < 3) {
